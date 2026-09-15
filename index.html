@@ -3,17 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>// MATRIX_SHARE // v3.1</title>
+    <title>// MATRIX_SERVERLESS_SHARE // v4.0</title>
     <style>
         :root {
             --bg-color: #050505;
-            --panel-bg: rgba(15, 22, 28, 0.85);
+            --panel-bg: rgba(15, 22, 28, 0.9);
             --accent-color: #00ff66;
             --text-color: #d1ffd6;
             --border-color: #00ff66;
         }
 
-        /* Матрица эффектісі */
         canvas {
             position: fixed;
             top: 0;
@@ -90,7 +89,6 @@
             width: 100%;
             transition: 0.2s;
             text-transform: uppercase;
-            box-shadow: 0 0 5px rgba(0, 255, 102, 0.2);
         }
 
         .btn:hover {
@@ -110,10 +108,11 @@
             border: 1px solid var(--border-color);
             color: #fff;
             word-break: break-all;
-            font-size: 0.9rem;
+            font-size: 0.8rem;
+            max-height: 100px;
+            overflow-y: auto;
             margin-bottom: 10px;
             border-radius: 4px;
-            box-shadow: inset 0 0 5px rgba(0,255,102,0.5);
         }
 
         .preview-window {
@@ -132,23 +131,9 @@
             border-bottom: 1px solid var(--border-color);
         }
 
-        .dots {
-            display: flex;
-            gap: 6px;
-            margin-right: 15px;
-        }
-
-        .dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background-color: var(--accent-color);
-        }
-
-        .preview-title {
-            font-size: 0.8rem;
-            color: var(--accent-color);
-        }
+        .dots { display: flex; gap: 6px; margin-right: 15px; }
+        .dot { width: 10px; height: 10px; border-radius: 50%; background-color: var(--accent-color); }
+        .preview-title { font-size: 0.8rem; color: var(--accent-color); }
 
         .preview-body {
             padding: 15px;
@@ -164,10 +149,7 @@
             border-radius: 4px;
             border: 1px solid var(--border-color);
         }
-
-        .preview-body audio {
-            width: 100%;
-        }
+        .preview-body audio { width: 100%; }
     </style>
 </head>
 <body>
@@ -175,21 +157,23 @@
     <canvas id="matrixCanvas"></canvas>
 
     <header>
-        <h1>[ SYSTEM: MATRIiX_SHARE ]</h1>
-        <p style="color: #a3ffa3; margin: 5px 0 0 0;">// Secure Media Streaming & Upload Protocol</p>
+        <h1>[ MATRIX_SERVERLESS_V4 ]</h1>
+        <p style="color: #a3ffa3; margin: 5px 0 0 0;">// Local Encryption & Peer Sharing Protocol</p>
     </header>
 
     <div class="container">
+        <!-- Файл енгізу блогы -->
         <div class="upload-box" onclick="document.getElementById('fileInput').click()">
-            <span style="color: var(--accent-color);" id="uploadText">> INITIALIZE_UPLOAD_SEQUENCE_</span>
-            <p style="font-size: 0.8rem; color: #888; margin-top: 10px;">Қолдайды: Суреттер, Аудио, Видео</p>
+            <span style="color: var(--accent-color);" id="uploadText">> INITIALIZE_LOCAL_ENCRYPTION_</span>
+            <p style="font-size: 0.8rem; color: #888; margin-top: 10px;">Ұсынылады: Кішігірім суреттер, аудио, видео</p>
         </div>
         
         <input type="file" id="fileInput" accept="image/*, audio/*, video/*" onchange="fileSelected()">
-        <button class="btn" onclick="uploadFile()">execute upload.sh</button>
+        <button class="btn" onclick="generateSecureLink()">execute compile_link.sh</button>
 
+        <!-- Нәтиже бөлімі -->
         <div class="result-box" id="resultBox">
-            <p style="color: var(--accent-color);" id="statusText">✔ SUCCESS: DATA_STREAM_STABLE</p>
+            <p style="color: var(--accent-color);" id="statusText">✔ LINK COMPILED SUCCESSFULLY</p>
             
             <div class="link-output" id="linkOutput"></div>
             <button class="btn" onclick="copyLink()">copy_to_clipboard()</button>
@@ -205,12 +189,12 @@
     </div>
 
     <script>
-        // --- МАТРИЦА ЭФФЕКТІСІ ---
+        // --- МАТРИЦА ФОН ЭФФЕКТІСІ ---
         const canvas = document.getElementById('matrixCanvas');
         const ctx = canvas.getContext('2d');
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-        const alphabet = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄ1234567890ABCDEF'.split('');
+        const alphabet = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿ1234567890ABCDEF'.split('');
         const fontSize = 16;
         const columns = canvas.width / fontSize;
         const rainDrops = Array(Math.floor(columns)).fill(1);
@@ -223,74 +207,79 @@
             for (let i = 0; i < rainDrops.length; i++) {
                 const text = alphabet[Math.floor(Math.random() * alphabet.length)];
                 ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
-                if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) {
-                    rainDrops[i] = 0;
-                }
+                if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) rainDrops[i] = 0;
                 rainDrops[i]++;
             }
         };
         setInterval(drawMatrix, 30);
-        window.addEventListener('resize', () => {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-        });
 
-        // --- ФАЙЛДАРДЫ ЖҮКТЕУ ЛОГИКАСЫ ---
+        // --- СЕРВЕРСІЗ СІЛТЕМЕ ЖАСАУ ЛОГИКАСЫ ---
         function fileSelected() {
             const fileInput = document.getElementById('fileInput');
             const uploadText = document.getElementById('uploadText');
             if (fileInput.files.length > 0) {
-                uploadText.innerText = `[ TARGET: ${fileInput.files[0].name} ]`;
+                uploadText.innerText = `[ READY: ${fileInput.files[0].name} ]`;
                 uploadText.style.color = "#fff";
             }
         }
 
-        async function uploadFile() {
+        function generateSecureLink() {
             const fileInput = document.getElementById('fileInput');
             if (fileInput.files.length === 0) {
                 alert("Қате: Алдымен файлды таңдаңыз!");
                 return;
             }
 
-            // ТҮЗЕТІЛДІ: Нақты бірінші файлды таңдаймыз [0]
-            const file = fileInput.files[0]; 
+            const file = fileInput.files[0];
+            const reader = new FileReader(); // Файлды кодқа айналдыру құралы
+
             const resultBox = document.getElementById('resultBox');
             const linkOutput = document.getElementById('linkOutput');
-            const previewBody = document.getElementById('previewBody');
             const statusText = document.getElementById('statusText');
 
-            statusText.innerText = "⚡ INJECTING DATA PACKETS... [LOADING]";
+            statusText.innerText = "⚡ COMPILING DATA PATTERNS...";
             statusText.style.color = "yellow";
-            linkOutput.innerText = ">>> connecting via fast secure channel...";
-            previewBody.innerHTML = "<p style='color: #888;'>Генерация превью...</p>";
             resultBox.style.display = "block";
 
-            const formData = new FormData();
-            formData.append('file', file);
-
-            try {
-                // tmpfiles.org ресми API хосты
-                const response = await fetch('https://tmpfiles.org/api/v1/upload', {
-                    method: 'POST',
-                    body: formData
-                });
+            reader.onload = function(e) {
+                const base64Data = e.target.result; // Файл толық кодқа айналды
                 
-                const data = await response.json();
-                
-                if (response.ok && data.data && data.data.url) {
-                    statusText.innerText = "✔ SEQUENCE COMPLETED: FILE DEPLOYED";
-                    statusText.style.color = "var(--accent-color)";
-                    
-                    // Тікелей жүктелетін таза сілтеме жасау
-                    const finalLink = data.data.url.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
-                    linkOutput.innerText = finalLink;
+                // Сайттың қазіргі мекенжайын алып, соңына файл кодын хэш (#) арқылы жалғаймыз
+                const currentUrl = window.location.href.split('#')[0];
+                const finalShareableLink = currentUrl + '#' + encodeURIComponent(base64Data);
 
-                    // Плеерді жылдам іске қосу
-                    const fileURL = URL.createObjectURL(file);
-                    showPreview(file.type, fileURL);
-                } else {
-                    throw new Error("Сервер қабылдамады");
-                }
-            } catch (error) {
-                statusText.innerText = "❌ EXCEPTION: SERVER_UNREACHABLE";
-                statusText.style.color = "#ff3333";
+                // Экранға шығару
+                statusText.innerText = "✔ LINK COMPILED & ENCRYPTED";
+                statusText.style.color = "var(--accent-color)";
+                linkOutput.innerText = finalShareableLink;
+
+                // Алдын ала көру (Превью)
+                showPreview(file.type, base64Data);
+            };
+
+            reader.readAsDataURL(file); // Файлды оқуды бастау
+        }
+
+        function showPreview(fileType, url) {
+            const previewBody = document.getElementById('previewBody');
+            const previewTitle = document.getElementById('previewTitle');
+            previewBody.innerHTML = ""; 
+
+            if (fileType.startsWith('image/')) {
+                previewTitle.innerText = "render_image.obj";
+                previewBody.innerHTML = `<img src="${url}" alt="Matrix Preview">`;
+            } 
+            else if (fileType.startsWith('audio/')) {
+                previewTitle.innerText = "decode_audio.wav";
+                previewBody.innerHTML = `<audio controls src="${url}"></audio>`;
+            } 
+            else if (fileType.startsWith('video/')) {
+                previewTitle.innerText = "stream_core.mkv";
+                previewBody.innerHTML = `<video controls src="${url}"></video>`;
+            }
+        }
+
+        // СІЛТЕМЕНІ АВТОМАТТЫ ТҮРДЕ ОҚУ (Егер біреу сілтеме арқылы кірсе)
+        window.onload = function() {
+            if (window.location.hash) {
+                try {
