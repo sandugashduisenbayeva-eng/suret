@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>// MATRIX_SHARE // v3.0</title>
+    <title>// MATRIX_SHARE // v3.1</title>
     <style>
         :root {
             --bg-color: #050505;
@@ -13,7 +13,7 @@
             --border-color: #00ff66;
         }
 
-        /* Матрица эффектісі үшін фон */
+        /* Матрица эффектісі */
         canvas {
             position: fixed;
             top: 0;
@@ -172,16 +172,15 @@
 </head>
 <body>
 
-    <!-- Матрица эффектісіне арналған холст -->
     <canvas id="matrixCanvas"></canvas>
 
     <header>
-        <h1>[ SYSTEM: MATRIX_SHARE ]</h1>
+        <h1>[ SYSTEM: MATRIiX_SHARE ]</h1>
         <p style="color: #a3ffa3; margin: 5px 0 0 0;">// Secure Media Streaming & Upload Protocol</p>
     </header>
 
     <div class="container">
-        <div class="upload-box" onclick="document.getElementById('fileInput').click()" id="dropZone">
+        <div class="upload-box" onclick="document.getElementById('fileInput').click()">
             <span style="color: var(--accent-color);" id="uploadText">> INITIALIZE_UPLOAD_SEQUENCE_</span>
             <p style="font-size: 0.8rem; color: #888; margin-top: 10px;">Қолдайды: Суреттер, Аудио, Видео</p>
         </div>
@@ -206,51 +205,37 @@
     </div>
 
     <script>
-        // --- МАТРИЦА ФОН ЭФФЕКТІСІ ---
+        // --- МАТРИЦА ЭФФЕКТІСІ ---
         const canvas = document.getElementById('matrixCanvas');
         const ctx = canvas.getContext('2d');
-
         canvas.width = window.innerWidth;
         canvas.height = window.innerHeight;
-
-        const katakana = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄﾅﾆﾇﾈﾉﾊﾋﾌﾍﾎﾏﾐﾑﾒﾓﾔﾕﾖﾗﾘﾙﾚﾛﾜﾝ1234567890ABCDEF';
-        const alphabet = katakana.split('');
-
+        const alphabet = 'ｱｲｳｴｵｶｷｸｹｺｻｼｽｾｿﾀﾁﾂﾃﾄ1234567890ABCDEF'.split('');
         const fontSize = 16;
         const columns = canvas.width / fontSize;
-
-        const rainDrops = [];
-        for (let x = 0; x < columns; x++) {
-            rainDrops[x] = 1;
-        }
+        const rainDrops = Array(Math.floor(columns)).fill(1);
 
         const drawMatrix = () => {
             ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
             ctx.fillStyle = '#0F0';
             ctx.font = fontSize + 'px monospace';
-
             for (let i = 0; i < rainDrops.length; i++) {
                 const text = alphabet[Math.floor(Math.random() * alphabet.length)];
                 ctx.fillText(text, i * fontSize, rainDrops[i] * fontSize);
-
                 if (rainDrops[i] * fontSize > canvas.height && Math.random() > 0.975) {
                     rainDrops[i] = 0;
                 }
                 rainDrops[i]++;
             }
         };
-
         setInterval(drawMatrix, 30);
-
         window.addEventListener('resize', () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
         });
 
-
-        // --- ФАЙЛДАРДЫ ЖҮКТЕУ ЛОГИКАСЫ (ЖАҢА ТҰРАҚТЫ СЕРВЕР) ---
+        // --- ФАЙЛДАРДЫ ЖҮКТЕУ ЛОГИКАСЫ ---
         function fileSelected() {
             const fileInput = document.getElementById('fileInput');
             const uploadText = document.getElementById('uploadText');
@@ -267,7 +252,8 @@
                 return;
             }
 
-            const file = fileInput.files[0];
+            // ТҮЗЕТІЛДІ: Нақты бірінші файлды таңдаймыз [0]
+            const file = fileInput.files[0]; 
             const resultBox = document.getElementById('resultBox');
             const linkOutput = document.getElementById('linkOutput');
             const previewBody = document.getElementById('previewBody');
@@ -283,8 +269,8 @@
             formData.append('file', file);
 
             try {
-                // Бұл жаңа баламалы сервер (Жоғары жылдамдық және бұғаттаусыз жұмыс істейді)
-                const response = await fetch('https://tmpfiles.org', {
+                // tmpfiles.org ресми API хосты
+                const response = await fetch('https://tmpfiles.org/api/v1/upload', {
                     method: 'POST',
                     body: formData
                 });
@@ -295,11 +281,16 @@
                     statusText.innerText = "✔ SEQUENCE COMPLETED: FILE DEPLOYED";
                     statusText.style.color = "var(--accent-color)";
                     
-                    // tmpfiles.org жүктеу сілтемесін тікелей көру сілтемесіне айналдыру
+                    // Тікелей жүктелетін таза сілтеме жасау
                     const finalLink = data.data.url.replace('tmpfiles.org/', 'tmpfiles.org/dl/');
                     linkOutput.innerText = finalLink;
 
-                    // Плеерді локалды оқыту арқылы жылдам іске қосу
+                    // Плеерді жылдам іске қосу
                     const fileURL = URL.createObjectURL(file);
                     showPreview(file.type, fileURL);
                 } else {
+                    throw new Error("Сервер қабылдамады");
+                }
+            } catch (error) {
+                statusText.innerText = "❌ EXCEPTION: SERVER_UNREACHABLE";
+                statusText.style.color = "#ff3333";
